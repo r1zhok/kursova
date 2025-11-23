@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: kursova-robota
+  datasource:
+    url: jdbc:postgresql://localhost:5432/kursova?currentSchema=public&serverTimezone=Europe/Kyiv
+    username: admin
+    password: admin
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        generate_statistics: false
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+        jdbc:
+          time_zone: Europe/Kyiv
+    show-sql: true
