@@ -29,12 +29,11 @@ public abstract class ProductMovement {
 
     @ManyToOne
     @JoinColumn(name = "invoice_id")
-    private Invoice invoice;;
+    private Invoice invoice;
 
 
     private String description;
 
-    // Constructor
     public ProductMovement() {
         this.date = LocalDateTime.now();
     }

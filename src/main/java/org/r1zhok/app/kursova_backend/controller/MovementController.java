@@ -1,6 +1,7 @@
 package org.r1zhok.app.kursova_backend.controller;
 
 import org.r1zhok.app.kursova_backend.dto.MovementDTO;
+import org.r1zhok.app.kursova_backend.dto.MovementResponseDTO;
 import org.r1zhok.app.kursova_backend.entity.Arrival;
 import org.r1zhok.app.kursova_backend.entity.ProductMovement;
 import org.r1zhok.app.kursova_backend.entity.Shipment;
@@ -40,7 +41,7 @@ public class MovementController {
      * POST /api/movements/arrival
      */
     @PostMapping("/arrival")
-    public ResponseEntity<Arrival> createArrival(@RequestBody MovementDTO dto) {
+    public ResponseEntity<MovementResponseDTO> createArrival(@RequestBody MovementDTO dto) {
         var product = productRepository.findById(dto.getProductId())
                 .orElseThrow(() -> new RuntimeException("Товар не знайдено"));
 
@@ -57,10 +58,10 @@ public class MovementController {
         Arrival saved = movementRepository.save(arrival);
         productRepository.save(product);
 
-        // Observer Pattern
         stockSubject.notifyObservers(product, oldQuantity, product.getQuantity());
+        MovementResponseDTO responseDto = MovementResponseDTO.from(saved, product.getName());
 
-        return new ResponseEntity<>(saved, HttpStatus.CREATED);
+        return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
     }
 
     /**
@@ -68,7 +69,7 @@ public class MovementController {
      * POST /api/movements/shipment
      */
     @PostMapping("/shipment")
-    public ResponseEntity<Shipment> createShipment(@RequestBody MovementDTO dto) {
+    public ResponseEntity<MovementResponseDTO> createShipment(@RequestBody MovementDTO dto) {
         var product = productRepository.findById(dto.getProductId())
                 .orElseThrow(() -> new RuntimeException("Товар не знайдено"));
 
@@ -86,8 +87,9 @@ public class MovementController {
         productRepository.save(product);
 
         stockSubject.notifyObservers(product, oldQuantity, product.getQuantity());
+        MovementResponseDTO responseDto = MovementResponseDTO.from(saved, product.getName());
 
-        return new ResponseEntity<>(saved, HttpStatus.CREATED);
+        return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
     }
 
     /**
@@ -95,7 +97,7 @@ public class MovementController {
      * POST /api/movements/writeoff
      */
     @PostMapping("/writeoff")
-    public ResponseEntity<WriteOff> createWriteOff(@RequestBody MovementDTO dto) {
+    public ResponseEntity<MovementResponseDTO> createWriteOff(@RequestBody MovementDTO dto) {
         var product = productRepository.findById(dto.getProductId())
                 .orElseThrow(() -> new RuntimeException("Товар не знайдено"));
 
@@ -112,10 +114,10 @@ public class MovementController {
         WriteOff saved = movementRepository.save(writeOff);
         productRepository.save(product);
 
-        // Observer Pattern
         stockSubject.notifyObservers(product, oldQuantity, product.getQuantity());
+        MovementResponseDTO responseDto = MovementResponseDTO.from(saved, product.getName());
 
-        return new ResponseEntity<>(saved, HttpStatus.CREATED);
+        return new ResponseEntity<>(responseDto, HttpStatus.CREATED);
     }
 
     /**
@@ -123,9 +125,16 @@ public class MovementController {
      * GET /api/movements/product/{productId}
      */
     @GetMapping("/product/{productId}")
-    public ResponseEntity<List<ProductMovement>> getMovementsByProduct(@PathVariable Long productId) {
+    public ResponseEntity<List<MovementResponseDTO>> getMovementsByProduct(@PathVariable Long productId) {
         List<ProductMovement> movements = movementRepository.findByProduct_Id(productId);
-        return ResponseEntity.ok(movements);
+        List<MovementResponseDTO> dtos = movements.stream()
+                .map(movement -> {
+                    String productName = movement.getProduct() != null ? movement.getProduct().getName() : "N/A";
+                    return MovementResponseDTO.from(movement, productName);
+                })
+                .toList();
+
+        return ResponseEntity.ok(dtos);
     }
 
     /**
@@ -133,10 +142,17 @@ public class MovementController {
      * GET /api/movements?start=2024-01-01T00:00:00&end=2024-12-31T23:59:59
      */
     @GetMapping
-    public ResponseEntity<List<ProductMovement>> getMovementsByDateRange(
+    public ResponseEntity<List<MovementResponseDTO>> getMovementsByDateRange(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end) {
         List<ProductMovement> movements = movementRepository.findByDateBetween(start, end);
-        return ResponseEntity.ok(movements);
+        List<MovementResponseDTO> dtos = movements.stream()
+                .map(movement -> {
+                    String productName = movement.getProduct() != null ? movement.getProduct().getName() : "N/A";
+                    return MovementResponseDTO.from(movement, productName);
+                })
+                .toList();
+
+        return ResponseEntity.ok(dtos);
     }
 }

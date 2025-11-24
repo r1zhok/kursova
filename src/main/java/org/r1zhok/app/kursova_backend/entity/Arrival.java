@@ -4,7 +4,11 @@ import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @Entity
 @DiscriminatorValue("ARRIVAL")
 public class Arrival extends ProductMovement {
@@ -21,8 +25,5 @@ public class Arrival extends ProductMovement {
     public MovementType getMovementType() {
         return MovementType.ARRIVAL;
     }
-
-    public Invoice getInvoice() { return invoice; }
-    public void setInvoice(Invoice invoice) { this.invoice = invoice; }
 }
 
